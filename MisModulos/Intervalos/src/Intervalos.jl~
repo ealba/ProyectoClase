@@ -28,7 +28,7 @@ function redonDOWN(x)
 end
 
 Intervalo(a,b)=Intervalo(redonDOWN(a),redonUP(b)) #Con esta definición puedo usar como argumento cadenas de caracteres
-#tomando en cuenta el redondeo
+                                                    # tomando en cuenta el redondeo
                                                     
 
 Intervalo(a)=Intervalo(a,a)
