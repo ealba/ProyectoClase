@@ -1,3 +1,5 @@
 Logs de Ernesto:
 
 Ernesto_001: módulo con RungeKutta.jl con los métodos Runge kutta 2 y 4 para sacar z0 y con eso sacar T' de la condición 6.9 de Tucker. Se explica más en el Notebook Runge KUtta2-4 para numeros.ipynb
+
+Ernesto_002: conjuntar y nadamás
