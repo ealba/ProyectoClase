@@ -82,6 +82,22 @@ export RungeKutta2, RungeKutta4, zetacero, BuscarTBuena
     end
         
         
+        
+        
+    function BuscarTBuena(x0,t0,h,n,F::Function,z0::Intervalo)    
+        tf=n*h+t0;
+        #z0=zetacero(x0,h,n,F) 
+        
+        i=0;
+        a=false;
+        while a==false
+            T=tf-h*i+t0
+            z1=x0+Intervalo(t0,T)*F(T,z0)
+            a=(z1 in z0) #la condición a la que quieras llegar
+            i += 1    
+        end
+        return (tf-h*i+t0)
+    end
 
 
 
