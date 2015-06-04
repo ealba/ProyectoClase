@@ -5,7 +5,7 @@ export RungeKutta2, RungeKutta4, zetacero, BuscarTBuena
 
     
     #Método genérico de Runge-Kutta 2 para resolver ecuaciones de la forma x'=dx/dt=f(t,x)
-    function RungeKutta2(t0::Float64,x0::Float64,h::Float64,n::Integer,f::Function)
+    function RungeKutta2(t0,x0,h,n,f::Function)
         tf=t0+h*n
         t=linspace(t0,tf,n+1)
 
@@ -27,7 +27,7 @@ export RungeKutta2, RungeKutta4, zetacero, BuscarTBuena
 
 
     #Método genérico de Runge-Kutta 4 para resolver ecuaciones de la forma x'=dx/dt=f(t,x)
-    function RungeKutta4(t0::Float64,x0::Float64,h::Float64,n::Integer,f::Function)
+    function RungeKutta4(t0,x0,h,n,f::Function)
 
         tf=t0+h*n
         t=linspace(t0,tf,n+1)

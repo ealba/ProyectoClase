@@ -5,3 +5,9 @@ Ernesto_001: módulo con RungeKutta.jl con los métodos Runge kutta 2 y 4 para s
 Ernesto_002: conjuntar y nadamás
 
 Ernesto_003: Intenté extender para mayores tiempos reiniciando el algoritmo (BuscarTBuena) luego de dar un paso de integración pero se tarda años. También hice PrimerOrden.jl que engloba todo lo hecho hasta ahorita.
+
+
+Ernesto_004: Añadí las funciones NEuler1Paso, NEulerMPasos y graficarEulerM al módulo PrimerOrden.jl. Estos resumen el  trabajo para extender el método de integración a M pasos (aunque si el primer paso tiene longitud T, los demás pasos tienen longitud Ti<T y llega un punto donde Ti=0)
+
+Ernesto_004: deltaT <------> ordenK. 
+                

@@ -144,18 +144,18 @@ end
 
 ########Resumido para resolver:
 
-function NEuler1Paso(f,x0,t0,n,dt,deltaT)
+function NEuler1Paso(f,x0,t0,n,dt,ordenK)
     tf=t0+dt*n;
     #x_RK=RungeKutta4(t0,x0,dt,n,f);
     T=BuscarTBuena(x0,dt,n,f);
     z0=zetacero(x0,dt,n,f);
-    z_k0=kaesimaZeta(t0,T,x0,z0,f,deltaT)[end];
+    z_k0=kaesimaZeta(t0,T,x0,z0,f,ordenK)[end];
     #z_k=ptosenvolventes(t0,h,n,x0,f,m);
     #graficaEnvolvente(t0,T,x0,nuevaListaXs)
     #PyPlot.plot(linspace(t0,tf,n+1),x_RK,"red");
     #PyPlot.plot(linspace(n*dt,n*dt,n+1),linspace(minimum(x_RK),maximum(x_RK),n+1),"--r")
 
-    nuevaListaXs=envolvente(t0,T,x0,z_k0,f,deltaT)
+    nuevaListaXs=envolvente(t0,T,x0,z_k0,f,ordenK)
     return(nuevaListaXs,T)
 
 end
@@ -164,7 +164,7 @@ end
 
 
 
-function NEulerMPasos(f,x0,t0,n,dt,deltaT,M)   
+function NEulerMPasos(f,x0,t0,n,dt,ordenK,M)   
     cero=[Intervalo(0)];
     xinicial=similar(cero,M);
     tinicial=zeros(M);
@@ -173,8 +173,8 @@ function NEulerMPasos(f,x0,t0,n,dt,deltaT,M)
     tf=t0+dt*n;
 
     #primer paso de integración
-    nuevaListaXs1=NEuler1Paso(f,x0,t0,n,dt,deltaT)[1];
-    T=NEuler1Paso(f,x0,t0,n,dt,deltaT)[2];
+    nuevaListaXs1=NEuler1Paso(f,x0,t0,n,dt,ordenK)[1];
+    T=NEuler1Paso(f,x0,t0,n,dt,ordenK)[2];
     tinicial[1]=T
     z0=zetacero(x0,dt,n,f);
 
@@ -182,8 +182,8 @@ function NEulerMPasos(f,x0,t0,n,dt,deltaT,M)
     #ya no se usa NEuler1Paso porque se tiene que usar BuscarTBuena partiendo de 
     Xinicial=nuevaListaXs1[end]; #variables mudas
     Tinicial=BuscarTBuena(Xinicial,0,dt,n,f,z0); #variables mudas
-    z_k=kaesimaZeta(0,Tinicial,Xinicial,z0,f,deltaT)[end];
-    nuevaListaXs2=envolvente(0,Tinicial,Xinicial,z_k,f,deltaT);
+    z_k=kaesimaZeta(0,Tinicial,Xinicial,z0,f,ordenK)[end];
+    nuevaListaXs2=envolvente(0,Tinicial,Xinicial,z_k,f,ordenK);
     tinicial[2]=tinicial[1]+Tinicial
     xinicial[2]=Xinicial
 
@@ -198,8 +198,8 @@ function NEulerMPasos(f,x0,t0,n,dt,deltaT,M)
         a=nuevaListaXstotal[i-1]
         Xinicial=a[end];
         Tinicial=BuscarTBuena(Xinicial,0,dt,n,f,z0); #variables mudas
-        z_k=kaesimaZeta(0,Tinicial,Xinicial,z0,f,deltaT)[end];
-        nuevaListaXstotal[i]=envolvente(0,Tinicial,Xinicial,z_k,f,deltaT);
+        z_k=kaesimaZeta(0,Tinicial,Xinicial,z0,f,ordenK)[end];
+        nuevaListaXstotal[i]=envolvente(0,Tinicial,Xinicial,z_k,f,ordenK);
         xinicial[i]=Xinicial
 
         tinicial[i]=tinicial[i-1]+Tinicial
@@ -207,8 +207,8 @@ function NEulerMPasos(f,x0,t0,n,dt,deltaT,M)
         #println(Tinicial)
     
         #    tinicial[i]=BuscarTBuena(xinicial[1],0,dt,n,f,z0);
-    #z_k=kaesimaZeta(0,tinicial[1],xinicial[1],z0,f,deltaT)[end];
-    #nuevaListaXs1=envolvente(0,tinicial[1],xinicial[1],z_k,f,deltaT);
+    #z_k=kaesimaZeta(0,tinicial[1],xinicial[1],z0,f,ordenK)[end];
+    #nuevaListaXs1=envolvente(0,tinicial[1],xinicial[1],z_k,f,ordenK);
     end
 
     return(Array[tinicial,xinicial,nuevaListaXstotal])
@@ -363,13 +363,16 @@ cnames = [
 
 colores=[cnames[2*i+1] for i in 0:length(cnames)/2-1];
 
+
+
+
 ######Resumen de graficar
+
+
+
 function graficarEulerM(tinicial,xinicial,nuevaListaXstotal,x_RK,t0,tf,n,dt,pasosdeintegracion)
-    
     PyPlot.plot(linspace(t0,tf,n+1),x_RK,"red");
     PyPlot.plot(linspace(n*dt,n*dt,n+1),linspace(minimum(x_RK),maximum(x_RK),n+1),"--r")
-
-
 
     graficaEnvolvente(t0,tinicial[1],xinicial[1],nuevaListaXstotal[1],colores[1])
     graficaEnvolvente(tinicial[1],tinicial[2],xinicial[2],nuevaListaXstotal[2],colores[2])
@@ -377,6 +380,35 @@ function graficarEulerM(tinicial,xinicial,nuevaListaXstotal,x_RK,t0,tf,n,dt,paso
     for i in 3:pasosdeintegracion
         graficaEnvolvente(tinicial[i-1],tinicial[i],xinicial[i],nuevaListaXstotal[i], colores[i])
     end
+end
+
+
+
+function graficarEulerM(tinicial,xinicial,nuevaListaXstotal,x_RK,t0,tf,n,dt,pasosdeintegracion,graficartodoRK::Bool)
+
+    if graficartodoRK==true
+        graficarEulerM(tinicial,xinicial,nuevaListaXstotal,x_RK,t0,tf,n,dt,pasosdeintegracion)
+
+    else 
+        PyPlot.plot(linspace(t0,tf,n+1),x_RK,"red");
+
+        graficaEnvolvente(t0,tinicial[1],xinicial[1],nuevaListaXstotal[1],colores[1])
+        graficaEnvolvente(tinicial[1],tinicial[2],xinicial[2],nuevaListaXstotal[2],colores[2])
+       
+        println("el número máximo alcanzado con intervalos es: $(tinicial[end])")    
+
+        for i in 3:pasosdeintegracion
+            graficaEnvolvente(tinicial[i-1],tinicial[i],xinicial[i],nuevaListaXstotal[i], colores[i])
+        end
+        
+        println("Proporcione un número de pasos extra para graficar Runge Kuta después del método con intervalos")    
+        n_extra=readline()
+        n_extra=int(n_extra)
+        n_extra + length(tinicial) > n && error("número de pasos extras demasiado grande")
+
+        PyPlot.xlim([t0,tinicial[end]+n_extra*dt]); #<--------------------------------------------------- Aquí!!!!!!!!!!!!!1
+    end
+    
 end
 
 
