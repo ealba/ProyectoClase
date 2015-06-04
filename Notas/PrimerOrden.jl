@@ -384,9 +384,41 @@ end
 
 
 
-function graficarEulerM(tinicial,xinicial,nuevaListaXstotal,x_RK,t0,tf,n,dt,pasosdeintegracion,graficartodoRK::Bool)
+######UNIDO PARA GRAFICAR
 
-    if graficartodoRK==true
+function graficarEulerM(tinicial,xinicial,nuevaListaXstotal,x_RK,t0,tf,n,dt,pasosdeintegracion)
+    PyPlot.plot(linspace(t0,tf,n+1),x_RK,"red");
+    PyPlot.plot(linspace(n*dt,n*dt,n+1),linspace(minimum(x_RK),maximum(x_RK),n+1),"--r")
+
+    graficaEnvolvente(t0,tinicial[1],xinicial[1],nuevaListaXstotal[1],colores[1])
+    graficaEnvolvente(tinicial[1],tinicial[2],xinicial[2],nuevaListaXstotal[2],colores[2])
+
+    for i in 3:pasosdeintegracion
+        graficaEnvolvente(tinicial[i-1],tinicial[i],xinicial[i],nuevaListaXstotal[i], colores[i])
+    end
+end
+
+
+
+######UNIDO PARA GRAFICAR
+
+function graficarEulerM(tinicial,xinicial,nuevaListaXstotal,x_RK,t0,tf,n,dt,pasosdeintegracion)
+    PyPlot.plot(linspace(t0,tf,n+1),x_RK,"red");
+    PyPlot.plot(linspace(n*dt,n*dt,n+1),linspace(minimum(x_RK),maximum(x_RK),n+1),"--r")
+
+    graficaEnvolvente(t0,tinicial[1],xinicial[1],nuevaListaXstotal[1],colores[1])
+    graficaEnvolvente(tinicial[1],tinicial[2],xinicial[2],nuevaListaXstotal[2],colores[2])
+
+    for i in 3:pasosdeintegracion
+        graficaEnvolvente(tinicial[i-1],tinicial[i],xinicial[i],nuevaListaXstotal[i], colores[i])
+    end
+end
+
+
+
+function graficarEulerM(tinicial,xinicial,nuevaListaXstotal,x_RK,t0,tf,n,dt,pasosdeintegracion,graficartodoRungeKutta::Bool)
+
+    if graficartodoRungeKutta==true
         graficarEulerM(tinicial,xinicial,nuevaListaXstotal,x_RK,t0,tf,n,dt,pasosdeintegracion)
 
     else 
@@ -396,20 +428,27 @@ function graficarEulerM(tinicial,xinicial,nuevaListaXstotal,x_RK,t0,tf,n,dt,paso
         graficaEnvolvente(tinicial[1],tinicial[2],xinicial[2],nuevaListaXstotal[2],colores[2])
        
         println("el número máximo alcanzado con intervalos es: $(tinicial[end])")    
-
-        for i in 3:pasosdeintegracion
-            graficaEnvolvente(tinicial[i-1],tinicial[i],xinicial[i],nuevaListaXstotal[i], colores[i])
-        end
-        
-        println("Proporcione un número de pasos extra para graficar Runge Kuta después del método con intervalos")    
-        n_extra=readline()
-        n_extra=int(n_extra)
-        n_extra + length(tinicial) > n && error("número de pasos extras demasiado grande")
-
-        PyPlot.xlim([t0,tinicial[end]+n_extra*dt]); #<--------------------------------------------------- Aquí!!!!!!!!!!!!!1
     end
-    
+       
+            for i in 3:pasosdeintegracion
+                graficaEnvolvente(tinicial[i-1],tinicial[i],xinicial[i],nuevaListaXstotal[i], colores[i])    
+            end
+
+                println("Proporcione un número de pasos extra para graficar Runge Kuta después del método con intervalos")    
+                n_extra=readline()
+                n_extra=int(n_extra)
+                n_extra + length(tinicial) > n && error("número de pasos extras demasiado grande")
+
+                PyPlot.xlim([t0,tinicial[end]+n_extra*dt]); 
+          
 end
+    
+
+
+
+
+
+
 
 
 end
