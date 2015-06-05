@@ -366,23 +366,6 @@ colores=[cnames[2*i+1] for i in 0:length(cnames)/2-1];
 
 
 
-######Resumen de graficar
-
-
-
-function graficarEulerM(tinicial,xinicial,nuevaListaXstotal,x_RK,t0,tf,n,dt,pasosdeintegracion)
-    PyPlot.plot(linspace(t0,tf,n+1),x_RK,"red");
-    PyPlot.plot(linspace(n*dt,n*dt,n+1),linspace(minimum(x_RK),maximum(x_RK),n+1),"--r")
-
-    graficaEnvolvente(t0,tinicial[1],xinicial[1],nuevaListaXstotal[1],colores[1])
-    graficaEnvolvente(tinicial[1],tinicial[2],xinicial[2],nuevaListaXstotal[2],colores[2])
-
-    for i in 3:pasosdeintegracion
-        graficaEnvolvente(tinicial[i-1],tinicial[i],xinicial[i],nuevaListaXstotal[i], colores[i])
-    end
-end
-
-
 
 ######UNIDO PARA GRAFICAR
 
@@ -396,22 +379,7 @@ function graficarEulerM(tinicial,xinicial,nuevaListaXstotal,x_RK,t0,tf,n,dt,paso
     for i in 3:pasosdeintegracion
         graficaEnvolvente(tinicial[i-1],tinicial[i],xinicial[i],nuevaListaXstotal[i], colores[i])
     end
-end
-
-
-
-######UNIDO PARA GRAFICAR
-
-function graficarEulerM(tinicial,xinicial,nuevaListaXstotal,x_RK,t0,tf,n,dt,pasosdeintegracion)
-    PyPlot.plot(linspace(t0,tf,n+1),x_RK,"red");
-    PyPlot.plot(linspace(n*dt,n*dt,n+1),linspace(minimum(x_RK),maximum(x_RK),n+1),"--r")
-
-    graficaEnvolvente(t0,tinicial[1],xinicial[1],nuevaListaXstotal[1],colores[1])
-    graficaEnvolvente(tinicial[1],tinicial[2],xinicial[2],nuevaListaXstotal[2],colores[2])
-
-    for i in 3:pasosdeintegracion
-        graficaEnvolvente(tinicial[i-1],tinicial[i],xinicial[i],nuevaListaXstotal[i], colores[i])
-    end
+    println("el número máximo alcanzado con intervalos es: $(tinicial[end]) de $(tf)")    
 end
 
 
@@ -427,14 +395,14 @@ function graficarEulerM(tinicial,xinicial,nuevaListaXstotal,x_RK,t0,tf,n,dt,paso
         graficaEnvolvente(t0,tinicial[1],xinicial[1],nuevaListaXstotal[1],colores[1])
         graficaEnvolvente(tinicial[1],tinicial[2],xinicial[2],nuevaListaXstotal[2],colores[2])
        
-        println("el número máximo alcanzado con intervalos es: $(tinicial[end])")    
+        println("el número máximo alcanzado con intervalos es: $(tinicial[end]) de $(tf)")    
     end
        
             for i in 3:pasosdeintegracion
                 graficaEnvolvente(tinicial[i-1],tinicial[i],xinicial[i],nuevaListaXstotal[i], colores[i])    
             end
 
-                println("Proporcione un número de pasos extra para graficar Runge Kuta después del método con intervalos")    
+                println("Proporcione un número de pasos (de longitud $(dt)) extra para graficar Runge Kuta después del método con intervalos")    
                 n_extra=readline()
                 n_extra=int(n_extra)
                 n_extra + length(tinicial) > n && error("número de pasos extras demasiado grande")
@@ -448,7 +416,5 @@ end
 
 
 
-
-
-
 end
+
