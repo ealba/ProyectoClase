@@ -1,46 +1,216 @@
-###
-
 module Intervalos
+import Base.in
+import Base.==
+import Base.log
+import Base.exp
+import Base.^
+import Base.⊆
+import Base.∩
+import Base.zeros
+import Base.sin
+import Base.cos
+import Base.tan
 
-import Base.show
-import Base.+,Base.-,Base.*,Base./,Base.^,Base.==,Base.in
-import Base.exp, Base.log, Base.atan, Base.asin, Base.acos
+export Interval, in, == , redonUP , redonDOWN, log , exp, ^, monotona, ∩, ⊆, subset, Cestricto, radio, media, zeros, bisect,trisect, multisect, sin ,cos , tan , segment , IntervalMD 
 
-export Intervalo, redonUP, redonDOWN, uNir, iNtersectar
-
-type Intervalo
-    a::BigFloat
-    b::BigFloat
+#------------------------------------------------------------------------------------DEFINICIÓN DE INTERVALO
+typealias prec BigFloat
+type Interval
+    lo::Real
+    hi::Real   
     
-    Intervalo(a::BigFloat,b::BigFloat) = ( a>=b ? new(b,a) : new(a,b))
+        function Interval(a, b)
+        a, b = a > b ? (b,a) : (a,b)      #invierte el intervalo si está al revés  
+        set_rounding(prec, RoundDown)
+        lo = BigFloat("$a")
+        set_rounding(prec,RoundUp)
+        hi = BigFloat("$b")
+        new(lo, hi)
+        end
 end
 
-function redonUP(x)
-    with_rounding(BigFloat,RoundUp) do 
-        BigFloat(x) 
+function Interval(f)  #Para definir los escalares  
+    Interval(f,f)             
+end
+
+Interval() = println("Intervalo vacío")
+
+
+#------------------------------------------------------------------------------------
+
+#Para desplegar menos a la hora de sacar un intervalo
+
+function Base.show(io::IO, t::Interval)
+    repr="($(t.lo), $(t.hi))"
+    print(io,repr)
+end
+
+
+#------------------------------------------------------------------------------------OPERACIONES de conjuntos entre intervalos
+
+function in(x::Real,l::Interval)
+	#manera fácil:
+	#(Interval(x).hi <= l.hi && Interval(x).lo >= l.lo)
+	#return true
+    	#else
+	#return false
+    	#end
+
+	(Interval(x).hi <= l.hi && Interval(x).lo >= l.lo) && return true #manera cortocircuito
+	return false
+end
+
+function ⊆(A::Interval, B::Interval)
+    if ((B.lo<= A.lo) && (A.hi<=B.hi))
+    true
+        else
+        false
     end
 end
 
-function redonDOWN(x)
-    with_rounding(BigFloat,RoundDown) do 
-        BigFloat(x) 
+function subset(A::Interval, B::Interval)
+    if ((A ⊆ B) && ((A==B) == false))
+    true
+        else
+        false
     end
 end
 
-Intervalo(a,b)=Intervalo(redonDOWN(a),redonUP(b)) #Con esta definición puedo usar como argumento cadenas de caracteres
-                                                    # tomando en cuenta el redondeo
-                                                    
+function Cestricto(A::Interval, B::Interval)
+    if ((B.lo<A.lo) && (A.hi<B.hi))
+    true
+        else
+        false
+    end
+end
 
-Intervalo(a)=Intervalo(a,a)
+function ∩(A::Interval, B::Interval)
+    if (A.hi < B.lo || B.hi < A.lo)
+return("putamadre")
+        else
+        return Interval(max(A.lo,B.lo),min(A.hi,B.hi))
+    end
+end
 
-show(io::IO, a::Intervalo) = print(io::IO, "[$(a.a),
-$(a.b)]")
 
+function ==(a::Interval, b::Interval)
+	(a.lo == b.lo && a.hi ==b.hi) && return true 
+	return false
+end
+
+
+radio(A::Interval) = abs(A.hi - A.lo)
+
+media(A::Interval) = 0.5*(A.hi + A.lo)
+
+
+
+function bisect(x::Interval)
+    return [Interval(x.lo,(x.hi+x.lo)/2),Interval((x.hi+x.lo)/2,x.hi)]
+end
+
+function trisect(x::Interval)
+    return [Interval(x.lo,x.lo+radio(x)/3),Interval(x.lo+radio(x)/3,x.lo+2*radio(x)/3),Interval(x.lo+2*radio(x)/3,x.hi)]
+end
+
+function zeros(T::Interval,dim::Integer)
+a=[];
+
+    for i in 1:dim
+    a=cat(1,a,Interval(0))
+end
+
+    b=a
+    for j in 1:dim-1
+    a=cat(2,a,b)
+end
+
+    return a
+end
+
+
+function multisect(x::Interval,ntot::Integer) 
+    
+    #println("Función que hace una bisección $(ntot) veces")
+    if ntot==0
+        return x
+    
+
+    else
+        even=[2*i for i in 1:2^(ntot)];
+        odds=even-1;
+        A=zeros(Interval(0),2^ntot)
+
+        #-------el paso 1
+        A[1:2,1]=bisect(x);
+        #----------------
+
+        #---------------------pasos 2 en adelante
+        for n in 2:ntot
+                #println("n==============================$n")
+            for i in 1:2^(n-1)
+                #println("i============$i")
+                    for j in even[i]
+                    for k in odds[i]
+                    #println ("j==$j")
+                    #println ("k===$k")
+                        A[k:j,n]=bisect(A[i,n-1])
+                    end
+                    end
+            end
+        end
+        #---------------------
+
+        return A[:,ntot]
+    end
+end
+
+
+function segment(A::Interval,n::Int)
+    Iseg=Interval[]
+    b = (A.hi-A.lo)/(n)
+    
+    for i in 1:n-1
+        set_rounding(BigFloat,RoundDown)
+        A1=A.lo + b*(i-1)
+        set_rounding(BigFloat,RoundUp)
+        A2=A.lo+b*i
+        set_rounding(BigFloat,RoundNearest)
+        push!(Iseg,Interval(A1,A2))
+    end
+            set_rounding(BigFloat,RoundDown)
+            A1=A.lo+b*(n-1)
+            set_rounding(BigFloat,RoundUp)
+            A2=A.hi
+            set_rounding(BigFloat,RoundNearest)
+            push!(Iseg,Interval(A1,A2))
+        return Iseg
+end
+
+
+
+
+
+#-----------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+#----------------------------------------------------------------------------OPERACIONES Aritméticas entre intervalos
 function redonUP(f::Function,x,y)
     with_rounding(BigFloat,RoundUp) do 
         f(BigFloat(x),BigFloat(y))
     end
 end
+function redonUP(f::Function,x)
+    with_rounding(BigFloat,RoundUp) do 
+        f(BigFloat(x))
+    end
+end
+
+
 
 function redonDOWN(f::Function,x,y)
     with_rounding(BigFloat,RoundDown) do 
@@ -48,11 +218,6 @@ function redonDOWN(f::Function,x,y)
     end
 end
 
-function redonUP(f::Function,x)
-    with_rounding(BigFloat,RoundUp) do 
-        f(BigFloat(x))
-    end
-end
 
 function redonDOWN(f::Function,x)
     with_rounding(BigFloat,RoundDown) do 
@@ -60,53 +225,273 @@ function redonDOWN(f::Function,x)
     end
 end
 
-function definidor!(f::Function)  #función que define operaciones entre intervalos
-    if f!=^
-        f(x::Intervalo,y::Intervalo) = (f==/ && y.a<0.0 && y.b>0.0) ? error("El intervalo divisor no puede contener al cero") :
-            Intervalo(min(redonDOWN(f,x.a,y.a),redonDOWN(f,x.b,y.b),redonDOWN(f,x.a,y.b),redonDOWN(f,x.b,y.a),
-                redonUP(f,x.a,y.a),redonUP(f,x.b,y.b),redonUP(f,x.a,y.b),redonUP(f,x.b,y.a)),
-            max(redonDOWN(f,x.a,y.a),redonDOWN(f,x.b,y.b),redonDOWN(f,x.a,y.b),redonDOWN(f,x.b,y.a),
-                redonUP(f,x.a,y.a),redonUP(f,x.b,y.b),redonUP(f,x.a,y.b),redonUP(f,x.b,y.a)))
-        f(x::Intervalo,y::Number) = (f==/ && (redonDOWN(y)==0.0 || redonUP(y)==0.0)) ?
-            error("No puedo dividir un intervalo entre cero") :
-            f(x,Intervalo(y))
-        f(x::Intervalo,y::ASCIIString) = (f==/ && (redonDOWN(y)==0.0 || redonUP(y)==0.0)) ?
-            error("No puedo dividir un intervalo entre cero") :
-            f(x,Intervalo(y))
-        f(y::Number,x::Intervalo) = (f==/ && x.a<0.0 && x.b>0.0) ? error("El intervalo divisor no puede contener al cero") :
-            f(Intervalo(y),x)
-        f(y::ASCIIString,x::Intervalo) = (f==/ && x.a<0.0 && x.b>0.0) ? error("El intervalo divisor no puede contener al cero") :
-            f(Intervalo(y),x)
-     else
-        f(x::Intervalo,y::Integer)= y<0 ? "1"/f(x,-y) :
-            (y==0 ? Intervalo("1") :
-            (x.a<0.0 && x.b>0.0 ? Intervalo(min(0.0,redonDOWN(f,x.a,y),redonDOWN(f,x.b,y)),max(redonDOWN(f,x.a,y),redonDOWN(f,x.b,y))) :
-            Intervalo(min(redonDOWN(f,x.a,y),redonDOWN(f,x.b,y)),max(redonDOWN(f,x.a,y),redonDOWN(f,x.b,y)))))       
+
+
+
+function +(v::Interval, w::Interval)    
+    Interval(redonDOWN(+,v.lo,w.lo),redonUP(+,v.hi,w.hi))
+end
+
+function +(v::Number, w::Interval)    
+    Interval(v)+w
+end
+
+function +(v::Interval, w::Number)    
+    v+Interval(w)
+end
+
+
+
+
+function -(v::Interval, w::Interval)    
+    Interval(redonDOWN(-,v.lo,w.hi),redonUP(-,v.hi,w.lo))
+end
+
+function -(v::Number, w::Interval)    
+    Interval(v)-w
+end
+
+function -(v::Interval, w::Number)    
+    v-Interval(w)
+end
+
+
+function *(v::Interval, w::Interval) 
+    Interval(min(redonDOWN(*,v.lo,w.lo),redonDOWN(*,v.lo,w.hi),redonDOWN(*,v.hi,w.lo),redonDOWN(*,v.hi,w.hi)),max(redonUP(*,v.lo,w.lo),redonUP(*,v.lo,w.hi),redonUP(*,v.hi,w.lo),redonUP(*,v.hi,w.hi)))    
+end
+
+function *(v::Number, w::Interval) 
+    Interval(v)*w
+end
+
+function *(v::Interval, w::Number) 
+    v*Interval(w)
+end
+
+
+
+
+
+
+
+
+
+function /(A::Interval, B::Interval)
+    if 0 in B == false
+        return A*Interval(redonDOWN(/,1,B.hi),redonUP(/,1,B.lo))
+    end
+    
+    if (0 in A && 0 in B)
+        return Interval(-Inf, Inf)
+    end
+    
+    if (A.hi < 0 && B.lo < B.hi == 0)
+        return Interval(redonDOWN(/,A.hi,B.lo), Inf)
+    end
+    
+    if (A.hi < 0 && B.lo < 0 < B.hi)
+        return Interval(redonDOWN(/,A.hi,B.lo), redonUP(/,A.hi,B.hi))
+    end
+    
+    if (A.hi < 0 && 0 == B.lo < B.hi)
+        return Interval(-Inf, redonUP(/,A.hi,B.hi))
+    end
+    
+    if (0< A.lo && B.lo < B.hi==0)
+        return Interval(-Inf, redonUP(/,A.lo,B.lo))
+    end
+    
+    if (0 < A.lo && B.lo < 0 < B.hi)
+        return Interval(redonDOWN(/,A.lo,B.hi), redonUP(/,A.lo,B.lo))
+    end
+    
+    if (0 < A.lo && 0 == B.lo < B.hi)
+        return Interval(redonDOWN(/,A.lo,B.hi), Inf)
+    end
+    
+    if ( 0 in A == false && B == Interval(0,0))
+        return Interval()
     end
 end
 
-definidor!(+)
-definidor!(-)
--(x::Intervalo) = x * -1
-definidor!(*)
-definidor!(/)
-definidor!(^)
 
-==(x::Intervalo,y::Intervalo) = (x.a==y.a && x.b==y.b) ? true : false
-in(x,y::Intervalo) = (y.a<=Intervalo(x).a && Intervalo(x).b<=y.b) ? true : false
-in(x::Intervalo,y::Intervalo) = in(x.a,y) && in(x.b,y)
-exp(x::Intervalo)=Intervalo(redonDOWN(exp,x.a),redonUP(exp,x.b))
-log(x::Intervalo)= x.a<0 ? error("Función log no acepta números negativos \n") : Intervalo(redonDOWN(log,x.a),redonUP(log,x.b))
-atan(x::Intervalo)=Intervalo(redonDOWN(atan,x.a),redonUP(atan,x.b))
-asin(x::Intervalo)=
-        x.a<-1||x.b>1 ? error("Función asin solo acepta números entre -1 y 1 \n") : Intervalo(redonDOWN(asin,x.a),redonUP(asin,x.b))
-acos(x::Intervalo)=
-        x.a<-1||x.b>1 ? error("Función acos solo acepta números entre -1 y 1 \n") : Intervalo(redonDOWN(acos,x.b),redonUP(acos,x.a))
-^(x::Intervalo,y)=exp(y*log(x))
+function /(v::Number, w::Interval)
+    Interval(v)/w
+end 
 
-uNir(x::Intervalo,y::Intervalo) = (x.a<=y.b && y.a<=x.b) ? Intervalo(min(x.a,y.a),max(x.b,y.b)) : return("Deben ser intervalos que se intersectan")
-iNtersectar(x::Intervalo,y::Intervalo) = (x.a<=y.b && y.a<=x.b) ? Intervalo(max(x.a,y.a),min(x.b,y.b)) : return("Deben ser intervalos que se intersectan")
+function /(v::Interval, w::Number)
+    v/Interval(w)
+end 
 
+#----------------------------------------------------------------------------
+
+function monotona(f::Function,v::Interval) #para cualquier función monótona, si es decreciente, se invierte el intervalo
+        Interval(redonDOWN(f,v.lo),redonUP(f,v.hi))
+end 
+
+
+function log(v::Interval)   # logaritmo del valor absoluto de una función
+    if (v.lo < 0 || v.hi < 0)
+        return throw(DomainError()) #("el logaritmo no admite números negativos")
+        elseif (v.lo == 0)
+            return Interval(-Inf,-Inf) 
+        else
+            return monotona(log,v)
+        end
+end 
+
+
+function exp(v::Interval)
+    monotona(exp,v)
+end 
+
+
+function ^(v::Interval, w::Integer)
+    
+    if (v.hi > 0 && v.lo > 0)
+        return Interval(v.lo^w,v.hi^w)
+        elseif (v.hi < 0 && v.lo < 0)
+        return Interval(v.hi^w,v.lo^w)
+        else        
+        return Interval(0,max(v.lo^2,v.hi^2))
+    
+    end
+end 
+
+
+function ^(v::Interval, q::Real) #Definido sólo para intervalos positivos
+    exp(Interval(q)*log(v))
+end 
+
+
+
+function Smas(A::Interval)
+    k1=int(floor((A.lo-π/2)/(2π)))
+    k2=int(ceil((A.hi-π/2)/(2π)))
+    S1=Float64[]
+        for i in k1:k2
+        push!(S1,2π*i+π/2)
+        end
+    return S1
+end
+
+
+
+function Smenos(A::Interval)
+    k1=int(floor((A.lo+π/2)/(2π)))
+    k2=int(ceil((A.hi+π/2)/(2π)))
+    S1=Float64[]
+        for i in k1:k2
+        push!(S1,2π*i-π/2)
+        end
+    return S1
+end
+
+function ∩(A::Interval, b::Array{Float64,1})
+    k=0
+        for i in 1:length(b)
+            if (b[i] in A)
+            k+=1
+            end
+        end
+    return k
+end
+
+
+function sin(A::Interval)
+if ((A ∩ Smenos(A)>0) && (A ∩ Smas(A) >0))
+return Interval(-1,1)
+end
+
+if ((A ∩ Smenos(A) >0) && (A ∩ Smas(A) ==0))
+set_rounding(BigFloat, RoundUp)
+A2=max(sin(A.lo),sin(A.hi))
+set_rounding(BigFloat, RoundNearest)
+return Interval(-1,A2)
+end
+
+if ((A ∩ Smenos(A) == 0) && (A ∩ Smas(A)>0))
+set_rounding(BigFloat, RoundDown)
+A1=min(sin(A.lo),sin(A.hi))
+set_rounding(BigFloat, RoundNearest)
+return Interval(A1,1)
+end
+
+if ((A ∩ Smenos(A) == 0) && (A ∩ Smas(A)==0))
+set_rounding(BigFloat, RoundDown)
+A1=min(sin(A.lo),sin(A.hi))
+set_rounding(BigFloat, RoundUp)
+A2=max(sin(A.lo),sin(A.hi))
+set_rounding(BigFloat, RoundNearest)
+return Interval(A1,A2)
+end
 
 end
 
+
+cos(A::Interval)=sin(A+π/2)
+
+tan(A::Interval)=sin(A)/(cos(A))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#----------------------------------------------------------En sí, cualquier función monótona la defines como monotona(función, intervalo)
+
+
+
+
+
+#----------------------------------------------------------
+#Cosas para Intervalos de varias dimensiones:
+
+typealias IntervalMD{} Vector{Interval}
+
+
+Base.promote_type{T<:Number}(::Type{T}, ::Type{Interval}) = Interval
+
+Base.convert(::Type{Interval}, x::Real) = Interval(x)
+Base.convert(::Type{Interval}, x::Interval) = x
+
+Base.convert(::Type{IntervalMD}, x::Real) = [Interval(x), Interval(x)]
+Base.convert(::Type{IntervalMD}, x::IntervalMD) = x
+
+
+
+Base.zero(::Type{Interval}) = Interval(0)
+promote_type(Int, Interval)
+
+Base.zeros(::Type{IntervalMD}) = [Interval(0), Interval(0)]
+promote_type(Int, Interval)
+
+
+Base.zero(x::Interval) = Interval(0)
+Base.zero(x::Any) = 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+end
